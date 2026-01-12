@@ -28,7 +28,7 @@ class DashboardController extends Controller
             case 'kasir':
                 return $this->kasirDashboard();
             default:
-                return redirect()->route('login');
+                return redirect()->route('auth.login');
         }
     }
 
