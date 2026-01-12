@@ -1,254 +1,262 @@
-<div>
-    @extends('layouts.app')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Pemilik - Nasi Jinggo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900">Dashboard Pemilik</h1>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-600">{{ Auth::user()->name }}</span>
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
+                            Logout
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </header>
 
-@section('title', 'Dashboard Pemilik')
-@section('page-title', 'Dashboard Pemilik')
-@section('page-description', 'Overview bisnis dan statistik penjualan')
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+            
+            <!-- Welcome Message -->
+            @if(session('success'))
+                <div class="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded">
+                    <p class="text-green-700">{{ session('success') }}</p>
+                </div>
+            @endif
 
-@section('content')
-<div class="space-y-6">
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Penjualan Hari Ini -->
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-blue-100 text-sm">Penjualan Hari Ini</p>
-                    <h3 class="text-3xl font-bold mt-2">Rp {{ number_format($salesToday ?? 0, 0, ',', '.') }}</h3>
-                    <p class="text-sm mt-2 text-blue-100">
-                        <i class="fas fa-arrow-up"></i> {{ $transactionsToday ?? 0 }} transaksi
-                    </p>
-                </div>
-                <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                    <i class="fas fa-money-bill-wave text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Total Produksi Hari Ini -->
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-green-100 text-sm">Produksi Hari Ini</p>
-                    <h3 class="text-3xl font-bold mt-2">{{ $productionToday ?? 0 }}</h3>
-                    <p class="text-sm mt-2 text-green-100">
-                        <i class="fas fa-box"></i> Bungkus diproduksi
-                    </p>
-                </div>
-                <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                    <i class="fas fa-utensils text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Stok Tersedia -->
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-purple-100 text-sm">Stok Tersedia</p>
-                    <h3 class="text-3xl font-bold mt-2">{{ $stockAvailable ?? 0 }}</h3>
-                    <p class="text-sm mt-2 text-purple-100">
-                        <i class="fas fa-warehouse"></i> Bungkus ready
-                    </p>
-                </div>
-                <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                    <i class="fas fa-boxes text-2xl"></i>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Total Karyawan -->
-        <div class="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white">
-            <div class="flex justify-between items-start">
-                <div>
-                    <p class="text-orange-100 text-sm">Total Karyawan</p>
-                    <h3 class="text-3xl font-bold mt-2">{{ $totalEmployees ?? 0 }}</h3>
-                    <p class="text-sm mt-2 text-orange-100">
-                        <i class="fas fa-user-check"></i> {{ $activeEmployees ?? 0 }} aktif
-                    </p>
-                </div>
-                <div class="bg-white bg-opacity-20 rounded-lg p-3">
-                    <i class="fas fa-users text-2xl"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Charts Row -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Grafik Penjualan 7 Hari -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-gray-800">
-                    <i class="fas fa-chart-line text-blue-500 mr-2"></i>
-                    Penjualan 7 Hari Terakhir
-                </h3>
-                <span class="text-sm text-gray-500">{{ \Carbon\Carbon::now()->format('d M') }}</span>
-            </div>
-            <canvas id="salesChart" height="250"></canvas>
-        </div>
-        
-        <!-- Produk Terlaris -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-gray-800">
-                    <i class="fas fa-fire text-orange-500 mr-2"></i>
-                    Produk Terlaris
-                </h3>
-                <span class="text-sm text-gray-500">Minggu Ini</span>
-            </div>
-            <div class="space-y-4">
-                @forelse($topProducts ?? [] as $index => $product)
-                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
-                        <div class="flex items-center space-x-3">
-                            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
-                                {{ $index + 1 }}
-                            </div>
-                            <div>
-                                <p class="font-semibold text-gray-800">{{ $product->name ?? 'Nasi Jinggo' }}</p>
-                                <p class="text-sm text-gray-500">{{ $product->sold ?? 0 }} terjual</p>
-                            </div>
+            <!-- Statistics Cards Row 1 -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <!-- Total Penjualan Hari Ini -->
+                <div class="bg-gradient-to-r from-green-400 to-green-500 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">Penjualan Hari Ini</p>
+                            <p class="text-3xl font-bold mt-2">Rp {{ number_format($salesToday, 0, ',', '.') }}</p>
                         </div>
-                        <div class="text-right">
-                            <p class="font-bold text-green-600">Rp {{ number_format($product->revenue ?? 0, 0, ',', '.') }}</p>
+                        <div class="bg-white bg-opacity-30 p-3 rounded-full">
+                            💰
                         </div>
                     </div>
-                @empty
-                    <div class="text-center py-8 text-gray-400">
-                        <i class="fas fa-box-open text-4xl mb-3"></i>
-                        <p>Belum ada data penjualan</p>
+                </div>
+
+                <!-- Total Transaksi -->
+                <div class="bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">Total Transaksi</p>
+                            <p class="text-3xl font-bold mt-2">{{ number_format($transactionsToday) }}</p>
+                        </div>
+                        <div class="bg-white bg-opacity-30 p-3 rounded-full">
+                            🧾
+                        </div>
                     </div>
-                @endforelse
+                </div>
+
+                <!-- Total Produksi -->
+                <div class="bg-gradient-to-r from-purple-400 to-purple-500 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">Produksi Hari Ini</p>
+                            <p class="text-3xl font-bold mt-2">{{ number_format($productionToday) }} porsi</p>
+                        </div>
+                        <div class="bg-white bg-opacity-30 p-3 rounded-full">
+                            🍱
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stok Menipis -->
+                <div class="bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg shadow-lg p-6 text-white">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm opacity-90">Stok Menipis</p>
+                            <p class="text-3xl font-bold mt-2">{{ $lowStockIngredients }}</p>
+                            <p class="text-xs opacity-75 mt-1">bahan baku</p>
+                        </div>
+                        <div class="bg-white bg-opacity-30 p-3 rounded-full">
+                            ⚠️
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Recent Transactions & Quick Actions -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Recent Transactions -->
-        <div class="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-lg font-bold text-gray-800">
-                    <i class="fas fa-receipt text-blue-500 mr-2"></i>
-                    Transaksi Terbaru
-                </h3>
-                <a href="{{ route('sales.index') }}" class="text-sm text-blue-600 hover:text-blue-800">
-                    Lihat Semua <i class="fas fa-arrow-right ml-1"></i>
+
+            <!-- Statistics Cards Row 2 -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Penjualan Bulan Ini</h3>
+                    <p class="text-2xl font-bold text-green-600">Rp {{ number_format($salesThisMonth, 0, ',', '.') }}</p>
+                    <p class="text-sm text-gray-600 mt-1">{{ number_format($transactionsThisMonth) }} transaksi</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Produksi Bulan Ini</h3>
+                    <p class="text-2xl font-bold text-purple-600">{{ number_format($productionThisMonth) }} porsi</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">Karyawan Aktif</h3>
+                    <p class="text-2xl font-bold text-blue-600">{{ $activeEmployees }} orang</p>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <a href="{{ route('users.index') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-blue-100 p-3 rounded-full text-2xl">👥</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Kelola Karyawan</h3>
+                            <p class="text-sm text-gray-600">Tambah & kelola akun staff</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ route('reports.profit-loss') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-purple-100 p-3 rounded-full text-2xl">📊</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Laporan Laba Rugi</h3>
+                            <p class="text-sm text-gray-600">Analisis keuangan usaha</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ route('pemilik.sales.index') }}" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                    <div class="flex items-center gap-4">
+                        <div class="bg-green-100 p-3 rounded-full text-2xl">💵</div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">Data Penjualan</h3>
+                            <p class="text-sm text-gray-600">Lihat riwayat transaksi</p>
+                        </div>
+                    </div>
                 </a>
             </div>
-            
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead>
-                        <tr class="border-b">
-                            <th class="text-left py-3 px-2 text-sm font-semibold text-gray-600">ID</th>
-                            <th class="text-left py-3 px-2 text-sm font-semibold text-gray-600">Waktu</th>
-                            <th class="text-left py-3 px-2 text-sm font-semibold text-gray-600">Kasir</th>
-                            <th class="text-right py-3 px-2 text-sm font-semibold text-gray-600">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentTransactions ?? [] as $transaction)
-                            <tr class="border-b hover:bg-gray-50">
-                                <td class="py-3 px-2 text-sm">#{{ $transaction->id ?? '001' }}</td>
-                                <td class="py-3 px-2 text-sm text-gray-600">{{ $transaction->created_at ?? now()->format('H:i') }}</td>
-                                <td class="py-3 px-2 text-sm">{{ $transaction->user->name ?? 'Kasir' }}</td>
-                                <td class="py-3 px-2 text-sm text-right font-semibold text-green-600">
-                                    Rp {{ number_format($transaction->total_amount ?? 5000, 0, ',', '.') }}
-                                </td>
-                            </tr>
+
+            <!-- Recent Transactions -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Sales Chart -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Grafik Penjualan 7 Hari Terakhir</h3>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+                <!-- Top Products -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Produk Terlaris</h3>
+                    <div class="space-y-3">
+                        @forelse($topProducts as $index => $product)
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">
+                                        {{ $index + 1 }}
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900">{{ $product->name }}</span>
+                                </div>
+                                <span class="text-sm font-bold text-gray-900">{{ number_format($product->total_sold) }} porsi</span>
+                            </div>
                         @empty
-                            <tr>
-                                <td colspan="4" class="text-center py-8 text-gray-400">
-                                    <i class="fas fa-inbox text-3xl mb-2"></i>
-                                    <p>Belum ada transaksi hari ini</p>
-                                </td>
-                            </tr>
+                            <p class="text-gray-500 text-sm text-center py-4">Belum ada data penjualan</p>
                         @endforelse
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-lg font-bold text-gray-800 mb-6">
-                <i class="fas fa-bolt text-yellow-500 mr-2"></i>
-                Quick Actions
-            </h3>
-            
-            <div class="space-y-3">
-                <a href="{{ route('users.create') }}" class="block w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg p-4 text-center transition">
-                    <i class="fas fa-user-plus text-xl mb-2"></i>
-                    <p class="font-semibold">Tambah Karyawan</p>
-                </a>
-                
-                <a href="#" class="block w-full bg-green-500 hover:bg-green-600 text-white rounded-lg p-4 text-center transition">
-                    <i class="fas fa-file-download text-xl mb-2"></i>
-                    <p class="font-semibold">Download Laporan</p>
-                </a>
-                
-                <a href="#" class="block w-full bg-purple-500 hover:bg-purple-600 text-white rounded-lg p-4 text-center transition">
-                    <i class="fas fa-chart-bar text-xl mb-2"></i>
-                    <p class="font-semibold">Analisis Bisnis</p>
-                </a>
-                
-                <a href="{{ route('profile') }}" class="block w-full bg-gray-500 hover:bg-gray-600 text-white rounded-lg p-4 text-center transition">
-                    <i class="fas fa-cog text-xl mb-2"></i>
-                    <p class="font-semibold">Pengaturan</p>
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-@endsection
 
-@push('scripts')
-<script>
-    // Sales Chart
-    const ctx = document.getElementById('salesChart').getContext('2d');
-    const salesChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {!! json_encode($salesLastWeek['dates'] ?? ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']) !!},
-            datasets: [{
-                label: 'Penjualan (Rp)',
-                data: {!! json_encode($salesLastWeek['amounts'] ?? [50000, 75000, 60000, 90000, 85000, 120000, 95000]) !!},
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return 'Rp ' + context.parsed.y.toLocaleString('id-ID');
-                        }
-                    }
-                }
+            <!-- Recent Transactions -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-lg font-semibold text-gray-900">Transaksi Terbaru</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tanggal</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kasir</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Metode</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($recentTransactions as $transaction)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">{{ $transaction->invoice_number }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $transaction->sale_date->format('d/m/Y H:i') }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">{{ $transaction->user->name }}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                                        Rp {{ number_format($transaction->total_amount, 0, ',', '.') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="px-2 py-1 bg-gray-100 rounded text-xs">{{ strtoupper($transaction->payment_method) }}</span>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">Belum ada transaksi hari ini</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Sales Chart
+        const salesData = @json($salesLastWeek);
+        const labels = salesData.map(item => {
+            const date = new Date(item.date);
+            return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
+        });
+        const data = salesData.map(item => item.total);
+
+        const ctx = document.getElementById('salesChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Penjualan (Rp)',
+                    data: data,
+                    borderColor: 'rgb(34, 197, 94)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return 'Rp ' + (value/1000) + 'k';
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rp ' + value.toLocaleString('id-ID');
+                            }
                         }
                     }
                 }
             }
-        }
-    });
-</script>
-@endpush
-</div>
+        });
+    </script>
+</body>
+</html>
