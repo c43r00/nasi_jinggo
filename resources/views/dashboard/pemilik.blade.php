@@ -151,26 +151,62 @@
                     <canvas id="salesChart"></canvas>
                 </div>
 
-                <!-- Top Products -->
+            <!-- Charts & Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <!-- Sales Chart -->
                 <div class="bg-white rounded-lg shadow p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Produk Terlaris</h3>
-                    <div class="space-y-3">
-                        @forelse($topProducts as $index => $product)
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">
-                                        {{ $index + 1 }}
-                                    </div>
-                                    <span class="text-sm font-medium text-gray-900">{{ $product->name }}</span>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Grafik Penjualan 7 Hari Terakhir</h3>
+                    <canvas id="salesChart"></canvas>
+                </div>
+
+            <!-- Top Products -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Produk Terlaris</h3>
+                <div class="space-y-3">
+                    @forelse($topProducts as $index => $product)
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-bold text-blue-600">
+                                    {{ $index + 1 }}
                                 </div>
-                                <span class="text-sm font-bold text-gray-900">{{ number_format($product->total_sold) }} porsi</span>
+                                <span class="text-sm font-medium text-gray-900">{{ $product->name }}</span>
                             </div>
-                        @empty
-                            <p class="text-gray-500 text-sm text-center py-4">Belum ada data penjualan</p>
-                        @endforelse
-                    </div>
+                            <span class="text-sm font-bold text-gray-900">{{ number_format($product->total_sold) }} porsi</span>
+                        </div>
+                    @empty
+                        <p class="text-gray-500 text-sm text-center py-4">Belum ada data penjualan</p>
+                    @endforelse
                 </div>
             </div>
+
+             <!-- Karyawan Bekerja Hari Ini -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Karyawan Bekerja Hari Ini</h3>
+                <div class="space-y-3">
+                    @forelse($employeesWorkingToday as $employee)
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
+                                    {{ strtoupper(substr($employee->name, 0, 1)) }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ $employee->name }}</p>
+                                    <p class="text-xs text-gray-600">{{ ucfirst($employee->role) }}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-bold text-blue-600">{{ $employee->transaction_count }}</p>
+                                <p class="text-xs text-gray-500">transaksi</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-center py-8">
+                            <p class="text-gray-500 text-sm">Belum ada karyawan yang bekerja hari ini</p>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
 
             <!-- Recent Transactions -->
             <div class="bg-white rounded-lg shadow overflow-hidden">
