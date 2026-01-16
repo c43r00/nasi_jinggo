@@ -28,7 +28,7 @@ class DashboardController extends Controller
             case 'kasir':
                 return $this->kasirDashboard();
             default:
-                return redirect()->route('login');
+                return redirect()->route('auth.login');
         }
     }
 
@@ -91,6 +91,15 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
         
+        // TAMBAHAN: Karyawan yang Bekerja Hari Ini
+        $employeesWorkingToday = User::select('users.id', 'users.name', 'users.role', DB::raw('COUNT(sales.id) as transaction_count'))
+            ->join('sales', 'users.id', '=', 'sales.user_id')
+            ->whereDate('sales.sale_date', today())
+            ->where('users.role', '!=', 'pemilik')
+            ->groupBy('users.id', 'users.name', 'users.role')
+            ->orderByDesc('transaction_count')
+            ->get();
+        
         return view('dashboard.pemilik', compact(
             'salesToday',
             'salesThisMonth',
@@ -102,7 +111,8 @@ class DashboardController extends Controller
             'lowStockIngredients',
             'topProducts',
             'salesLastWeek',
-            'recentTransactions'
+            'recentTransactions',
+            'employeesWorkingToday'  // TAMBAHAN
         ));
     }
 
