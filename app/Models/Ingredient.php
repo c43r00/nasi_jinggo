@@ -63,4 +63,12 @@ class Ingredient extends Model
             return 'aman';
         }
     }
+
+    public function getStockStatus()
+    {
+        if ($this->isLowStock()) {
+            return 'low';
+        }
+            return 'normal';
+    }
 }
