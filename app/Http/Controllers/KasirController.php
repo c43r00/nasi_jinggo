@@ -1,38 +1,58 @@
 <?php
-class KasirController {
 
-    public function index(){
-        $menu = [
-            ["nama"=>"Nasi Jinggo Ayam","harga"=>8000],
-            ["nama"=>"Nasi Jinggo Telur","harga"=>6000],
-            ["nama"=>"Nasi Jinggo Udang","harga"=>10000],
-            ["nama"=>"Nasi Jinggo Ikan","harga"=>9000],
-            ["nama"=>"Nasi Jinggo Tempe","harga"=>5000],
-            ["nama"=>"Nasi Jinggo Tahu","harga"=>5000],
-            ["nama"=>"Nasi Jinggo Combo","harga"=>12000],
-        ];
+namespace App\Http\Controllers;
 
-        include "views/kasir.php";
+use Illuminate\Http\Request;
+use App\Models\Transaksi;
+
+class KasirController extends Controller
+{
+    public function transaksi()
+    {
+        return view('kasir.transaksi');
     }
 
-    public function simpan(){
-        $menu = $_POST['menu'];
-        $qty = $_POST['qty'];
-        $total = $_POST['total'];
-        $metode = $_POST['metode'];
+    public function simpanTransaksi(Request $request)
+    {
+        // Validasi input
+        $request->validate([
+            'nama_pembeli'      => 'required|string',
+            'varian'            => 'required|string',
+            'jumlah'            => 'required|integer|min:1',
+            'metode_pembayaran' => 'required|string',
+        ]);
 
-        include "config/database.php";
+        // Daftar harga menu
+        $hargaMenu = [
+            'Nasi Jinggo Ayam'   => 8000,
+            'Nasi Jinggo Telur'  => 6000,
+            'Nasi Jinggo Udang'  => 10000,
+            'Nasi Jinggo Ikan'   => 9000,
+            'Nasi Jinggo Tempe'  => 5000,
+            'Nasi Jinggo Tahu'   => 5000,
+            'Nasi Jinggo Combo'  => 12000,
+        ];
 
-        $conn->query("INSERT INTO transaksi(total, metode_pembayaran) 
-                      VALUES ('$total','$metode')");
+        // Ambil harga sesuai menu
+        $harga = $hargaMenu[$request->varian];
+        $total = $harga * $request->jumlah;
 
-        $id_transaksi = $conn->insert_id;
+        // SIMPAN ke database (INI YANG TADI KURANG)
+        $transaksi = Transaksi::create([
+            'nama_pembeli'       => $request->nama_pembeli,
+            'varian'             => $request->varian,
+            'jumlah'             => $request->jumlah,
+            'harga'              => $harga,
+            'total'              => $total,
+            'metode_pembayaran'  => $request->metode_pembayaran,
+        ]);
 
-        for($i=0;$i<count($menu);$i++){
-            $conn->query("INSERT INTO detail_transaksi(id_transaksi, menu, qty) 
-                          VALUES ('$id_transaksi','$menu[$i]','$qty[$i]')");
-        }
+        return redirect()->route('kasir.rincian', $transaksi->id);
+    }
 
-        header("Location: index.php?page=kasir");
+    public function rincian($id)
+    {
+        $transaksi = Transaksi::findOrFail($id);
+        return view('kasir.rincian', compact('transaksi'));
     }
 }
