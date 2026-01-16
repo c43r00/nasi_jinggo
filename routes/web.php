@@ -11,6 +11,7 @@ use App\Http\Controllers\IngredientPurchaseController;
 use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\DapurController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -58,4 +59,11 @@ Route::middleware('auth')->group(function () {
     Route::get('profile', [UserController::class, 'profile'])->name('profile');
     Route::patch('profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::patch('profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
+});
+
+   Route::prefix('dapur')->name('dapur.')->group(function () {
+    Route::get('/', [DapurController::class, 'index'])->name('index');
+    Route::post('/store', [DapurController::class, 'store'])->name('store');
+    Route::get('/low-stock', [DapurController::class, 'getLowStock'])->name('low-stock');
+    Route::get('/export-pdf', [DapurController::class, 'exportPDF'])->name('export-pdf');
 });

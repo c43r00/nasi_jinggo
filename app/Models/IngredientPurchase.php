@@ -51,6 +51,26 @@ class IngredientPurchase extends Model
             }
         });
     }
+
+    public function isExpired()
+    {
+        if (!$this->expired_date) {
+            return false;
+        }
+        return \Carbon\Carbon::parse($this->expired_date)->isPast();
+    }
+
+    public function isNearExpiry($days = 30)
+    {
+        if (!$this->expired_date) {
+            return false;
+        }
+    
+    $expiryDate = \Carbon\Carbon::parse($this->expired_date);
+    $today = \Carbon\Carbon::today();
+    
+    return $expiryDate->diffInDays($today) <= $days && !$this->isExpired();
+    }
 }
 
 
