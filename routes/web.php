@@ -81,3 +81,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::patch('profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 });
+Route::middleware('role:pemilik')->prefix('pemilik')->group(function () {
+    // Employee Management
+    Route::resource('users', UserController::class);
+    Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+    
+    // Export PDF - TAMBAHKAN INI
+    Route::get('users-export-pdf', [UserController::class, 'exportPdf'])->name('users.export-pdf');
+    });

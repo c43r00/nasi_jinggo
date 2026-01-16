@@ -93,14 +93,25 @@
             @endif
 
             <!-- Actions Bar -->
-            <div class="bg-white rounded-lg shadow p-4 mb-6 flex justify-between items-center">
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900">Daftar Karyawan</h2>
-                </div>
-                <a href="{{ route('users.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium inline-flex items-center gap-2">
-                    <span class="text-xl">+</span> Tambah Karyawan
-                </a>
+        <div class="bg-white rounded-lg shadow p-4 mb-6 flex justify-between items-center">
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900">Daftar Karyawan</h2>
             </div>
+            <div class="flex items-center gap-3">
+                <!-- Tombol Export PDF -->
+                <a href="{{ route('users.export-pdf') }}" 
+                class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium inline-flex items-center gap-2"
+                target="_blank">
+                    📄 Export PDF
+                </a>
+        
+        <!-- Tombol Tambah Karyawan -->
+        <a href="{{ route('users.create') }}" 
+           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium inline-flex items-center gap-2">
+            <span class="text-xl">+</span> Tambah Karyawan
+        </a>
+    </div>
+</div>
 
             <!-- Data Table -->
             <div class="bg-white rounded-lg shadow overflow-hidden">

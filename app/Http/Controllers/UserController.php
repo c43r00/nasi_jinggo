@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class UserController extends Controller
 {
@@ -251,4 +252,28 @@ class UserController extends Controller
 
         return back()->with('success', 'Password berhasil diubah!');
     }
+
+    public function exportPdf()
+    {
+    $users = User::where('role', '!=', 'pemilik')
+        ->withCount(['sales', 'productions', 'ingredientPurchases'])
+        ->orderBy('created_at', 'desc')
+        ->get();
+    
+    // Statistics
+    $totalEmployees = $users->count();
+    $activeEmployees = $users->where('is_active', true)->count();
+    $staffDapur = $users->where('role', 'staff_dapur')->count();
+    $kasir = $users->where('role', 'kasir')->count();
+    
+    $pdf = Pdf::loadView('users.pdf', compact(
+        'users', 
+        'totalEmployees', 
+        'activeEmployees', 
+        'staffDapur', 
+        'kasir'
+    ));
+    
+    return $pdf->download('data-karyawan-' . date('Y-m-d') . '.pdf');
+    }   
 }
