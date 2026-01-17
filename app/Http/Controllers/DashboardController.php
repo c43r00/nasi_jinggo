@@ -15,27 +15,10 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        $user = Auth::user();
-        
-        // Dashboard berbeda berdasarkan role
-        switch ($user->role) {
-            case 'pemilik':
-                return $this->pemilikDashboard();
-            case 'staff_dapur':
-                return $this->staffDapurDashboard();
-            case 'kasir':
-                return $this->kasirDashboard();
-            default:
-                return redirect()->route('auth.login');
-        }
-    }
-
     /**
-     * Dashboard untuk Pemilik
+     * Dashboard untuk Pemilik ONLY
      */
-    private function pemilikDashboard()
+    public function pemilikDashboard()
     {
         // Total Penjualan Hari Ini
         $salesToday = Sale::whereDate('sale_date', today())->sum('total_amount');
@@ -91,7 +74,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
         
-        // TAMBAHAN: Karyawan yang Bekerja Hari Ini
+        // Karyawan yang Bekerja Hari Ini
         $employeesWorkingToday = User::select('users.id', 'users.name', 'users.role', DB::raw('COUNT(sales.id) as transaction_count'))
             ->join('sales', 'users.id', '=', 'sales.user_id')
             ->whereDate('sales.sale_date', today())
@@ -112,121 +95,7 @@ class DashboardController extends Controller
             'topProducts',
             'salesLastWeek',
             'recentTransactions',
-            'employeesWorkingToday'  // TAMBAHAN
-        ));
-    }
-
-    /**
-     * Dashboard untuk Staff Dapur
-     */
-    private function staffDapurDashboard()
-    {
-        $user = Auth::user();
-        
-        // Produksi Hari Ini oleh user ini
-        $myProductionToday = Production::where('user_id', $user->id)
-            ->whereDate('production_date', today())
-            ->sum('quantity_produced');
-        
-        // Total Produksi Hari Ini (semua staff)
-        $totalProductionToday = Production::whereDate('production_date', today())
-            ->sum('quantity_produced');
-        
-        // Bahan Baku Tersedia
-        $availableIngredients = Ingredient::where('stock_quantity', '>', 0)->count();
-        
-        // Bahan Baku Menipis
-        $lowStockIngredients = Ingredient::whereColumn('stock_quantity', '<=', 'minimum_stock')->count();
-        
-        // Bahan Baku Habis
-        $outOfStockIngredients = Ingredient::where('stock_quantity', '<=', 0)->count();
-        
-        // Recent Productions (5 terakhir dari user ini)
-        $recentProductions = Production::with('product')
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
-        
-        // Daftar Bahan Baku Menipis
-        $lowStockList = Ingredient::with('category')
-            ->whereColumn('stock_quantity', '<=', 'minimum_stock')
-            ->orderBy('stock_quantity', 'asc')
-            ->get();
-        
-        // Produk yang bisa diproduksi
-        $products = Product::where('is_active', true)->get();
-        
-        return view('dashboard.staff-dapur', compact(
-            'myProductionToday',
-            'totalProductionToday',
-            'availableIngredients',
-            'lowStockIngredients',
-            'outOfStockIngredients',
-            'recentProductions',
-            'lowStockList',
-            'products'
-        ));
-    }
-
-    /**
-     * Dashboard untuk Kasir
-     */
-    private function kasirDashboard()
-    {
-        $user = Auth::user();
-        
-        // Penjualan Hari Ini oleh kasir ini
-        $mySalesToday = Sale::where('user_id', $user->id)
-            ->whereDate('sale_date', today())
-            ->sum('total_amount');
-        
-        // Total Transaksi Hari Ini oleh kasir ini
-        $myTransactionsToday = Sale::where('user_id', $user->id)
-            ->whereDate('sale_date', today())
-            ->count();
-        
-        // Total Penjualan Hari Ini (semua kasir)
-        $totalSalesToday = Sale::whereDate('sale_date', today())->sum('total_amount');
-        
-        // Total Transaksi Hari Ini (semua kasir)
-        $totalTransactionsToday = Sale::whereDate('sale_date', today())->count();
-        
-        // Produk Tersedia
-        $availableProducts = Product::where('is_active', true)
-            ->where('stock_quantity', '>', 0)
-            ->count();
-        
-        // Produk Habis
-        $outOfStockProducts = Product::where('is_active', true)
-            ->where('stock_quantity', '<=', 0)
-            ->count();
-        
-        // Recent Sales (5 transaksi terakhir dari kasir ini)
-        $recentSales = Sale::with('saleItems.product')
-            ->where('user_id', $user->id)
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
-        
-        // Produk untuk POS
-        $products = Product::where('is_active', true)
-            ->where('stock_quantity', '>', 0)
-            ->get();
-        
-        // Payment Methods
-        $paymentMethods = ['cash', 'transfer', 'qris', 'debit'];
-        
-        return view('dashboard.kasir', compact(
-            'mySalesToday',
-            'myTransactionsToday',
-            'totalSalesToday',
-            'totalTransactionsToday',
-            'availableProducts',
-            'outOfStockProducts',
-            'recentSales',
-            'products',
-            'paymentMethods'
+            'employeesWorkingToday'
         ));
     }
 }

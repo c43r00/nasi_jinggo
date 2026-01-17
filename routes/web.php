@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Http\Controllers;
-
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
@@ -10,52 +8,51 @@ use App\Http\Controllers\ProductionController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\IngredientPurchaseController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\DapurController;
 use App\Http\Controllers\KasirController;
 
-/*
-|--------------------------------------------------------------------------
-| HALAMAN AWAL
-|--------------------------------------------------------------------------
-*/
+
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-/*
-|--------------------------------------------------------------------------
-| LOGIN & GUEST ROUTES
-|--------------------------------------------------------------------------
-*/
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
 });
 
-/*
-|--------------------------------------------------------------------------
-| PREVIEW HALAMAN KASIR (TANPA LOGIN) - Sesuaikan jika perlu middleware
-|--------------------------------------------------------------------------
-*/
-Route::get('/kasir/transaksi', [KasirController::class, 'transaksi']);
-Route::post('/kasir/simpan', [KasirController::class, 'simpanTransaksi']);
-Route::get('/kasir/rincian/{id}', [KasirController::class, 'rincian'])->name('kasir.rincian');
 
-/*
-|--------------------------------------------------------------------------
-| AUTH ROUTES (SEMUA YANG BUTUH LOGIN)
-|--------------------------------------------------------------------------
-*/
 Route::middleware('auth')->group(function () {
     
-    // Logout & Dashboard
+    // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    // Dashboard - Redirect berdasarkan role
+    Route::get('/dashboard', function() {
+        $user = auth()->user();
+        
+        if ($user->role === 'pemilik') {
+            return redirect()->route('pemilik.dashboard');
+        } elseif ($user->role === 'staff_dapur') {
+            return redirect()->route('dapur.index');
+        } elseif ($user->role === 'kasir') {
+            return redirect()->route('kasir.index');
+        }
+        
+        return redirect()->route('login');
+    })->name('dashboard');
 
     // Role: PEMILIK
     Route::middleware('role:pemilik')->prefix('pemilik')->group(function () {
+        // Dashboard Pemilik
+        Route::get('/dashboard', [DashboardController::class, 'pemilikDashboard'])->name('pemilik.dashboard');
+        
         // Employee Management
         Route::resource('users', UserController::class);
         Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
+        Route::get('users-export-pdf', [UserController::class, 'exportPdf'])->name('users.export-pdf');
         
         // View (Read-only)
         Route::get('productions', [ProductionController::class, 'index'])->name('pemilik.productions.index');
@@ -75,14 +72,24 @@ Route::middleware('auth')->group(function () {
         });
     });
 
-    // Role: STAFF DAPUR & PEMILIK
-    Route::middleware('role:staff_dapur,pemilik')->prefix('dapur')->group(function () {
+    // Role: STAFF DAPUR
+    Route::middleware('role:staff_dapur,pemilik')->prefix('dapur')->name('dapur.')->group(function () {
+        Route::get('/', [DapurController::class, 'index'])->name('index');
+        Route::post('/store', [DapurController::class, 'store'])->name('store');
+        Route::get('/low-stock', [DapurController::class, 'getLowStock'])->name('low-stock');
+        Route::get('/export-pdf', [DapurController::class, 'exportPDF'])->name('export-pdf');
+        
         Route::resource('productions', ProductionController::class);
         Route::get('productions-quick', [ProductionController::class, 'quickCreate'])->name('productions.quick-create');
     });
 
-    // Role: KASIR & PEMILIK (POS LOGIN)
-    Route::middleware('role:kasir,pemilik')->prefix('kasir')->group(function () {
+    // Role: KASIR
+    Route::middleware('role:kasir,pemilik')->prefix('kasir')->name('kasir.')->group(function () {
+        Route::get('/', [KasirController::class, 'index'])->name('index');
+        Route::get('/transaksi', [KasirController::class, 'transaksi'])->name('transaksi');
+        Route::post('/simpan', [KasirController::class, 'simpanTransaksi'])->name('simpan');
+        Route::get('/rincian/{id}', [KasirController::class, 'rincian'])->name('rincian');
+        
         Route::resource('sales', SaleController::class);
         Route::get('pos', [SaleController::class, 'pos'])->name('pos.index');
         Route::post('pos/checkout', [SaleController::class, 'checkout'])->name('pos.checkout');
@@ -94,11 +101,3 @@ Route::middleware('auth')->group(function () {
     Route::patch('profile', [UserController::class, 'updateProfile'])->name('profile.update');
     Route::patch('profile/password', [UserController::class, 'updatePassword'])->name('profile.password');
 });
-Route::middleware('role:pemilik')->prefix('pemilik')->group(function () {
-    // Employee Management
-    Route::resource('users', UserController::class);
-    Route::patch('users/{user}/toggle-status', [UserController::class, 'toggleStatus'])->name('users.toggle-status');
-    
-    // Export PDF - TAMBAHKAN INI
-    Route::get('users-export-pdf', [UserController::class, 'exportPdf'])->name('users.export-pdf');
-    });
